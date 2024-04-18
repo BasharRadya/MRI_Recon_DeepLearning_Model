@@ -267,17 +267,23 @@ class Trainer(abc.ABC):
 
 
 class PEARTrainer(Trainer):
+
+    def __init__(self, model, loss_fn, optimizer, device="cpu", mask_lr):
+        super().__init__(self, model, loss_fn, optimizer, device="cpu")
+        self.mask_lr = mask_lr
+
     def train_batch(self, batch) -> BatchResult:
         x, _ = batch
         x = x.to(self.device)  # Image batch (N,C,H,W)
-        # TODO: Train a VAE on one batch.
-        # ====== YOUR CODE: ======
-        z, mu, logvar, = self.model(x)
-        loss, _, _ = self.loss_fn(x, z, mu, logvar)
+
+
+        model_out = self.model(x)
+        loss = self.loss_fn(model_out)
         self.optimizer.zero_grad()
         loss.backward()
         self.optimizer.step()
-        # ========================
+        if self.model.learn_mask: 
+            self.model.subsample.mask grad(self.mask_lr)
 
         return BatchResult(loss.item(), 1 / loss.item())
 
@@ -287,11 +293,9 @@ class PEARTrainer(Trainer):
         loss = None
         
         with torch.no_grad():
-            # TODO: Evaluate a VAE on one batch.
-            # ====== YOUR CODE: ======
-            z, mu, logvar, = self.model(x)
-            loss, _, _ = self.loss_fn(x, z, mu, logvar)
-            # ========================
+            model_out = self.model(x)
+            loss = self.loss_fn(model_out)
+            
 
         return BatchResult(loss.item(), 1 / loss.item())
 

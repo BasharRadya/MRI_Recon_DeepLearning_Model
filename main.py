@@ -3,6 +3,7 @@ import shutil
 import random
 import torch
 import numpy as np
+from models.PEAR import PEARModel
 from matplotlib import pyplot as plt
 from models.vanilla import VanillaModel
 from utils.utils import create_data_loaders, freq_to_image
@@ -20,10 +21,21 @@ def main():
     np.random.seed(args.seed)
     torch.manual_seed(args.seed)
     
-    model = VanillaModel(args.drop_rate, args.device, args.learn_mask).to(args.device) #Example instatiation - replace with your model
-    
-    
-   
+    #model = VanillaModel(args.drop_rate, args.device, args.learn_mask).to(args.device) #Example instatiation - replace with your model
+    param_grid = {
+        'drop_rate': range(0.1, 0.8, 0.1),
+        'device': ['cuda'],
+        'learn_mask': [True, False],
+        'block_len': [1, 2],
+        'blocks_num': [3, 4],
+        'bottleneck_block_len': [2, 3],
+        'first_channel': [32, 64],
+        'in_channel': [1],
+        'k_size': [3, 4],
+        'st': [2],
+        'lr': [0.1, 0.001, 0.00005],
+    }
+    do_validation(param_grid=param_grid, dl_train=train_loader, dl_valid=validation_loader)
 def create_arg_parser():
     parser = argparse.ArgumentParser()
     
