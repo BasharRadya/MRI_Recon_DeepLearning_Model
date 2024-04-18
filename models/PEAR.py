@@ -86,11 +86,14 @@ class PEARModel(torch.nn.Module):
             bottleneck_li.append(getBlock(cur_in, cur_out))
         bottleneck = nn.Sequential(*bottleneck_li)
 
-        self.encoder_li = encoder_li
-        self.decoder_li = decoder_li
-        self.pool_li = pool_li
-        self.upscale_li = upscale_li
-        self.bottleneck = bottleneck
+
+        def convert_models_to_cuda(li):
+            return [model.to(device) for model in li]
+        self.encoder_li = convert_models_to_cuda(encoder_li)
+        self.decoder_li = convert_models_to_cuda(decoder_li)
+        self.pool_li = convert_models_to_cuda(pool_li)
+        self.upscale_li = convert_models_to_cuda(upscale_li)
+        self.bottleneck = bottleneck.to(device)
         
         # self.encoder_seq1 = nn.Sequential(
         #     nn.Conv2d(in_channels=1, out_channels=64, kernel_size=3, padding=1),
@@ -183,7 +186,6 @@ class PEARModel(torch.nn.Module):
 
     def forward(self, x):
         x = self.subsample(x) #get subsampled input in image domain - use this as first line in your own model's forward
-        print(x.shape)
         skip_conn = []
         encoder_i = iter(self.encoder_li)
         pool_i = iter(self.pool_li)

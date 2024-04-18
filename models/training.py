@@ -7,7 +7,7 @@ from typing import Any, Callable
 from pathlib import Path
 from torch.utils.data import DataLoader
 
-from cs236781.train_results import FitResult, BatchResult, EpochResult
+from models.cs236781.train_results import FitResult, BatchResult, EpochResult
 
 
 class Trainer(abc.ABC):
@@ -268,33 +268,37 @@ class Trainer(abc.ABC):
 
 class PEARTrainer(Trainer):
 
-    def __init__(self, model, loss_fn, optimizer, device="cpu", mask_lr):
-        super().__init__(self, model, loss_fn, optimizer, device="cpu")
+    def __init__(self, model, loss_fn, optimizer, device="cpu", mask_lr=None):
+        model = model.to(device)
+        print(device)
+        super().__init__(model, loss_fn, optimizer, device)
         self.mask_lr = mask_lr
 
+
     def train_batch(self, batch) -> BatchResult:
-        x, _ = batch
+        
+        x, y = batch
         x = x.to(self.device)  # Image batch (N,C,H,W)
-
-
+        y = y.to(self.device)
         model_out = self.model(x)
-        loss = self.loss_fn(model_out)
+        loss = self.loss_fn(model_out, y)
         self.optimizer.zero_grad()
         loss.backward()
         self.optimizer.step()
         if self.model.learn_mask: 
-            self.model.subsample.mask grad(self.mask_lr)
+            self.model.subsample.mask_grad(self.mask_lr)
 
         return BatchResult(loss.item(), 1 / loss.item())
 
     def test_batch(self, batch) -> BatchResult:
-        x, _ = batch
+        x, y = batch
+        y = y.to(self.device)
         x = x.to(self.device)  # Image batch (N,C,H,W)
         loss = None
         
         with torch.no_grad():
             model_out = self.model(x)
-            loss = self.loss_fn(model_out)
+            loss = self.loss_fn(model_out, y)
             
 
         return BatchResult(loss.item(), 1 / loss.item())

@@ -7,23 +7,24 @@ from models.PEAR import PEARModel
 from matplotlib import pyplot as plt
 from models.vanilla import VanillaModel
 from utils.utils import create_data_loaders, freq_to_image
-
+from models.validation import do_validation
 
 
 
 def main():
+    print("starting main function")
     args = create_arg_parser().parse_args() #get arguments from cmd/defaults
+    print("starting making dataloaders")
     train_loader, validation_loader, test_loader = create_data_loaders(args) #get dataloaders
-    
     
     #freeze seeds for result reproducability
     random.seed(args.seed)
     np.random.seed(args.seed)
     torch.manual_seed(args.seed)
-    
+    print("starting making grid")
     #model = VanillaModel(args.drop_rate, args.device, args.learn_mask).to(args.device) #Example instatiation - replace with your model
     param_grid = {
-        'drop_rate': range(0.1, 0.8, 0.1),
+        'drop_rate': np.arange(0.1, 0.75, 0.1),
         'device': ['cuda'],
         'learn_mask': [True, False],
         'block_len': [1, 2],
@@ -35,7 +36,9 @@ def main():
         'st': [2],
         'lr': [0.1, 0.001, 0.00005],
     }
+    print("starting validation")
     do_validation(param_grid=param_grid, dl_train=train_loader, dl_valid=validation_loader)
+    print("finished")
 def create_arg_parser():
     parser = argparse.ArgumentParser()
     
