@@ -8,7 +8,7 @@ from pathlib import Path
 from torch.utils.data import DataLoader
 
 from models.cs236781.train_results import FitResult, BatchResult, EpochResult
-
+from typing import List, NamedTuple
 
 class Trainer(abc.ABC):
     """
@@ -280,6 +280,7 @@ class PEARTrainer(Trainer):
         x, y = batch
         x = x.to(self.device)  # Image batch (N,C,H,W)
         y = y.to(self.device)
+        y = y.unsqueeze(1)
         model_out = self.model(x)
         loss = self.loss_fn(model_out, y)
         self.optimizer.zero_grad()
@@ -292,8 +293,10 @@ class PEARTrainer(Trainer):
 
     def test_batch(self, batch) -> BatchResult:
         x, y = batch
-        y = y.to(self.device)
         x = x.to(self.device)  # Image batch (N,C,H,W)
+        y = y.to(self.device)
+        y = y.unsqueeze(1)
+        
         loss = None
         
         with torch.no_grad():
