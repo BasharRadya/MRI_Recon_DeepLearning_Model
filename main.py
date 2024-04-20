@@ -87,7 +87,7 @@ def generate_random_data(size):
 
     # Create a CustomDataset instance
     dataset = CustomDataset(data_list)
-
+    
     # Create a DataLoader
     dataloader = DataLoader(dataset, batch_size=10, shuffle=True)
 
@@ -101,6 +101,8 @@ def main():
     print("starting main function")
     sys.stdout.flush()
     args = create_arg_parser().parse_args() #get arguments from cmd/defaults
+    print("args:")
+    print(args)
     print("starting making dataloaders")
     sys.stdout.flush()
     train_loader, validation_loader, test_loader = None, None, None
@@ -129,21 +131,6 @@ def main():
     # print(total_samples)
     # print("here")
     
-    
-    
-    
-    
-    
-
-   
-
-
-
-
-    
-    
-
-
     #freeze seeds for result reproducability
     random.seed(args.seed)
     np.random.seed(args.seed)
@@ -171,7 +158,7 @@ def main():
         'device': ['cuda'],
         'learn_mask': [True, False],
         'block_len': [2],
-        'blocks_num': [3],
+        'blocks_num': [4],
         'bottleneck_block_len': [2],
         'first_channel': [64],
         'in_channel': [1],

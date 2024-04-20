@@ -33,7 +33,7 @@ def do_validation(param_grid, dl_train, dl_valid):
         del params['lr']
         model = PEAR.PEARModel(**params)
         optimizer = optim.Adam(model.parameters(), lr=lr)
-        scheduler = ReduceLROnPlateau(optimizer, mode='min', patience=2, factor=0.5, verbose=True)
+        scheduler = ReduceLROnPlateau(optimizer, mode='min', patience=3, factor=0.5, verbose=True)
 
         # Train and evaluate the model
         trainer = training.PEARTrainer(
@@ -44,7 +44,7 @@ def do_validation(param_grid, dl_train, dl_valid):
             mask_lr=lr
         )
 
-        res = trainer.fit(dl_train=dl_train, dl_test=dl_valid, num_epochs=20, checkpoints="checkpoints/" + model_str, early_stopping=7)
+        res = trainer.fit(dl_train=dl_train, dl_test=dl_valid, num_epochs=50, checkpoints="checkpoints/" + model_str, early_stopping=7)
         def mean(li):
             return sum(li) / len(li)
         mean_train_loss = mean(res.train_loss)
