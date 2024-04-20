@@ -270,7 +270,6 @@ class PEARTrainer(Trainer):
 
     def __init__(self, model, loss_fn, optimizer, device="cpu", mask_lr=None):
         model = model.to(device)
-        print(device)
         super().__init__(model, loss_fn, optimizer, device)
         self.mask_lr = mask_lr
 

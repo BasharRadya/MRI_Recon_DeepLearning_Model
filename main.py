@@ -10,12 +10,46 @@ from utils.utils import create_data_loaders, freq_to_image
 from models.validation import do_validation
 
 
+from torch.utils.data import Dataset, DataLoader
+from tqdm import tqdm
+
+class CustomDataset(Dataset):
+    def __init__(self, data):
+        self.data = data
+        
+    def __len__(self):
+        return len(self.data)
+    
+    def __getitem__(self, index):
+        return self.data[index]
+
+def getFastDataloader(old):
+
+    all_data = []
+    for x in tqdm(old.dataset, desc="Processing dataset", unit=" samples"):
+        all_data.append(x)
+    # Create a custom dataset instance
+    custom_dataset = CustomDataset(all_data)
+
+    # Use DataLoader to create an iterator over the dataset
+    batch_size = old.batch_size
+    shuffle = True
+    data_loader = DataLoader(custom_dataset, batch_size=batch_size, shuffle=shuffle)
+    return data_loader
+    
+
 
 def main():
+    import sys
     print("starting main function")
+    sys.stdout.flush()
     args = create_arg_parser().parse_args() #get arguments from cmd/defaults
     print("starting making dataloaders")
+    sys.stdout.flush()
     train_loader, validation_loader, test_loader = create_data_loaders(args) #get dataloaders
+    
+    
+    
     # total_samples = len(train_loader) * train_loader.batch_size
     # print(total_samples)
     # print("here")
@@ -25,9 +59,6 @@ def main():
     
     
     
-    
-    # import torch
-    # from torch.utils.data import DataLoader, Dataset
 
     # # Define a generator function
     # def data_generator():
@@ -78,12 +109,21 @@ def main():
 
 
 
+    print("starting making fast dataloaders")
+    sys.stdout.flush()
+
+    train_loader = getFastDataloader(train_loader)
+    validation_loader = getFastDataloader(validation_loader)
+    test_loader = getFastDataloader(test_loader)
+    
+
 
     #freeze seeds for result reproducability
     random.seed(args.seed)
     np.random.seed(args.seed)
     torch.manual_seed(args.seed)
     print("starting making grid")
+    sys.stdout.flush()
     #model = VanillaModel(args.drop_rate, args.device, args.learn_mask).to(args.device) #Example instatiation - replace with your model
     # param_grid = {
     #     'drop_rate': np.arange(0.1, 0.75, 0.1),
@@ -100,19 +140,21 @@ def main():
     # }
 
     param_grid = {
-        'drop_rate': np.arange(0.1, 0.75, 0.1),
+        #'drop_rate': np.arange(0.1, 0.75, 0.1),
+        'drop_rate': [0.2],
         'device': ['cuda'],
         'learn_mask': [True, False],
         'block_len': [2],
         'blocks_num': [3],
         'bottleneck_block_len': [2],
-        'first_channel': [32],
+        'first_channel': [8],
         'in_channel': [1],
         'k_size': [3],
         'st': [2],
-        'lr': [0.0005],
+        'lr': [0.001],
     }
     print("starting validation")
+
     do_validation(param_grid=param_grid, dl_train=train_loader, dl_valid=validation_loader)
     print("finished")
 def create_arg_parser():
