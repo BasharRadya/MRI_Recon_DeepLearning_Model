@@ -1,0 +1,8 @@
+/py-sbatch
+/checkpoints
+/datasets
+/data/__pycache__/
+/models/__pycache__/
+/py-sbatch.sh
+/utils/__pycache__/
+
