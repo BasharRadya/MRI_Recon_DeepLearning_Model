@@ -5,4 +5,5 @@
 /models/__pycache__/
 /py-sbatch.sh
 /utils/__pycache__/
-
+/results
+/seeResults.ipynb

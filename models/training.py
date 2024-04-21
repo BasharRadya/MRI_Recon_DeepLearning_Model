@@ -277,6 +277,7 @@ class PEARTrainer(Trainer):
     def train_batch(self, batch) -> BatchResult:
         
         x, y = batch
+        orig_x = x
         x = x.to(self.device)  # Image batch (N,C,H,W)
         y = y.to(self.device)
         y = y.unsqueeze(1)
@@ -287,7 +288,7 @@ class PEARTrainer(Trainer):
         self.optimizer.step()
         if self.model.learn_mask: 
             self.model.subsample.mask_grad(self.mask_lr)
-
+        
         return BatchResult(loss.item(), 1 / loss.item())
 
     def test_batch(self, batch) -> BatchResult:

@@ -87,7 +87,7 @@ def generate_random_data(size):
 
     # Create a CustomDataset instance
     dataset = CustomDataset(data_list)
-    
+
     # Create a DataLoader
     dataloader = DataLoader(dataset, batch_size=10, shuffle=True)
 
@@ -157,10 +157,10 @@ def main():
         'drop_rate': [0.2],
         'device': ['cuda'],
         'learn_mask': [True, False],
-        'block_len': [2],
-        'blocks_num': [4],
+        'block_len': [1],
+        'blocks_num': [3, 4],
         'bottleneck_block_len': [2],
-        'first_channel': [64],
+        'first_channel': [8],
         'in_channel': [1],
         'k_size': [3],
         'st': [2],
