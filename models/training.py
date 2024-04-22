@@ -20,7 +20,7 @@ class Trainer(abc.ABC):
     - Single batch (train_batch/test_batch)
     """
 
-    def __init__(self, model, loss_fn, optimizer, device="cpu"):
+    def __init__(self, model, loss_fn, optimizer,scheduler, device="cpu"):
         """
         Initialize the trainer.
         :param model: Instance of the model to train.
@@ -32,6 +32,7 @@ class Trainer(abc.ABC):
         self.loss_fn = loss_fn
         self.optimizer = optimizer
         self.device = device
+        self.scheduler = scheduler
         model.to(self.device)
 
     def fit(
@@ -67,7 +68,7 @@ class Trainer(abc.ABC):
         prev_loss = None
         best_loss = None
         epochs_without_improvement = 0
-
+        starting_epoch=0
         checkpoint_filename = None
         if checkpoints is not None:
             checkpoint_filename = f"{checkpoints}.pt"
@@ -80,8 +81,10 @@ class Trainer(abc.ABC):
                     "ewi", epochs_without_improvement
                 )
                 self.model.load_state_dict(saved_state["model_state"])
-
-        for epoch in range(num_epochs):
+                self.optimizer.load_state_dict(saved_state["optimizer_state_dict"])
+                self.scheduler.load_state_dict(saved_state["scheduler_state_dict"])
+                starting_epoch = saved_state["epoch"] + 1
+        for epoch in range(starting_epoch,num_epochs):
             save_checkpoint = False
             verbose = False  # pass this to train/test_epoch.
             if epoch % print_every == 0 or epoch == num_epochs - 1:
@@ -117,26 +120,6 @@ class Trainer(abc.ABC):
             else:
                 epochs_without_improvement += 1  
                 
-            # if prev_loss != None:
-            #     if prev_loss >= test_loss:
-            #         epochs_without_improvement += 1
-            #     else:
-            #         epochs_without_improvement = 0
-            # else:    
-            #     prev_loss = test_loss
-            
-            
-            
-            
-            # if best_loss != None:
-            #     if best_loss <= test_loss:
-            #         epochs_without_improvement += 1                 
-            #     else:
-            #         best_loss = test_loss
-            #         epochs_without_improvement = 0
-            # else:    
-            #     best_loss = test_loss
-            
             
             class EpochResult(NamedTuple):
                 loss: float
@@ -145,12 +128,16 @@ class Trainer(abc.ABC):
             test_result = EpochResult(cur_test_loss, cur_test_acc)
             # ========================
 
+            print("*** Crurent learning rate: ",self.optimizer.param_groups[0]['lr'])
             # Save model checkpoint if requested
             if save_checkpoint and is_best and checkpoint_filename is not None:
                 saved_state = dict(
                     best_acc=best_acc,
                     ewi=epochs_without_improvement,
                     model_state=self.model.state_dict(),
+                    optimizer_state_dict=self.optimizer.state_dict(),
+                    scheduler_state_dict=self.scheduler.state_dict(),
+                    epoch=epoch
                 )
                 torch.save(saved_state, checkpoint_filename)
                 print(
@@ -268,9 +255,9 @@ class Trainer(abc.ABC):
 
 class PEARTrainer(Trainer):
 
-    def __init__(self, model, loss_fn, optimizer, device="cpu", mask_lr=None):
+    def __init__(self, model, loss_fn, optimizer,scheduler, device="cpu", mask_lr=None):
         model = model.to(device)
-        super().__init__(model, loss_fn, optimizer, device)
+        super().__init__(model, loss_fn, optimizer,scheduler, device)
         self.mask_lr = mask_lr
         # self.flag = True
 
@@ -309,7 +296,7 @@ class PEARTrainer(Trainer):
         self.optimizer.step()
         if self.model.learn_mask: 
             self.model.subsample.mask_grad(self.mask_lr)
-        return BatchResult(loss.item(), 1 / loss.item())
+        return BatchResult(loss.item(), - loss.item())
 
     def test_batch(self, batch) -> BatchResult:
         x, y = batch
@@ -324,6 +311,6 @@ class PEARTrainer(Trainer):
             loss = self.loss_fn(model_out, y)
             
 
-        return BatchResult(loss.item(), 1 / loss.item())
+        return BatchResult(loss.item(), - loss.item())
 
 

@@ -9,7 +9,8 @@ from . import training
 #from ./PEAR import PEARModel
 from . import PEAR
 import copy
-
+# from torcheval.metrics import PeakSignalNoiseRatio
+from skimage.metrics import peak_signal_noise_ratio
 from torch.optim.lr_scheduler import ReduceLROnPlateau
 
 # Define your dataset
@@ -19,6 +20,19 @@ from torch.optim.lr_scheduler import ReduceLROnPlateau
 # Define hyperparameters to tune
 
 
+
+class PSNRLoss(nn.Module):
+    def __init__(self):
+        super(PSNRLoss, self).__init__()
+        # self.data_range = data_range
+        # self.metric=PeakSignalNoiseRatio(data_range=self.data_range)
+        self.mse = torch.nn.MSELoss()
+
+    def forward(self, image_test, image_true):
+        # self.metric.update(image_test, image_true)
+        # psnr_value = self.metric.compute()
+        psnr_value = 20 * torch.log10(image_true.max() - image_true.min()) - (10 * torch.log10(self.mse(image_test, image_true)))
+        return -psnr_value  # Return negative PSNR value as we want to minimize it in training
 
 def do_validation(param_grid, dl_train, dl_valid):
     # Perform grid search
@@ -38,13 +52,14 @@ def do_validation(param_grid, dl_train, dl_valid):
         # Train and evaluate the model
         trainer = training.PEARTrainer(
             model=model,
-            loss_fn=torch.nn.MSELoss(),
+            loss_fn=PSNRLoss(),
             optimizer=optimizer,
             device=params['device'],
-            mask_lr=lr
+            mask_lr=lr,
+            scheduler=scheduler
         )
 
-        res = trainer.fit(dl_train=dl_train, dl_test=dl_valid, num_epochs=50, checkpoints="checkpoints/" + model_str, early_stopping=7)
+        res = trainer.fit(dl_train=dl_train, dl_test=dl_valid, num_epochs=10, checkpoints="checkpoints/" + model_str, early_stopping=7)
         def mean(li):
             return sum(li) / len(li)
         mean_train_loss = mean(res.train_loss)

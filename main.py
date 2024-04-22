@@ -164,7 +164,7 @@ def main():
         'block_len': [1],
         'blocks_num': [3, 4],
         'bottleneck_block_len': [2],
-        'first_channel': [64],
+        'first_channel': [8],
         'in_channel': [1],
         'k_size': [3],
         'st': [2],
