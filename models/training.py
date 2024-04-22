@@ -101,8 +101,12 @@ class Trainer(abc.ABC):
             
             cur_train_loss, cur_train_acc = self.train_epoch(dl_train, **kw)
             cur_test_loss, cur_test_acc = self.test_epoch(dl_test, **kw)
-            train_loss.append(torch.mean(torch.tensor(cur_train_loss)).item())
-            test_loss.append(torch.mean(torch.tensor(cur_test_loss)).item())
+            def get_mean(li):
+                return torch.tensor(li).mean().item()
+            cur_train_loss = get_mean(cur_train_loss)
+            cur_test_loss = get_mean(cur_test_loss)
+            train_loss.append(cur_train_loss)
+            test_loss.append(cur_test_loss)
             train_acc.append(cur_train_acc)
             test_acc.append(cur_test_acc)
             
@@ -115,7 +119,7 @@ class Trainer(abc.ABC):
                 save_checkpoint = True and (checkpoints != None)
                 
                 epochs_without_improvement = 0
-                best_loss = test_loss
+                best_loss = cur_test_loss
                 
             else:
                 epochs_without_improvement += 1  
@@ -126,9 +130,8 @@ class Trainer(abc.ABC):
                 accuracy: float
             train_result = EpochResult(cur_train_loss, cur_train_acc)
             test_result = EpochResult(cur_test_loss, cur_test_acc)
+            self.scheduler.step(- cur_test_loss)
             # ========================
-
-            print("*** Crurent learning rate: ",self.optimizer.param_groups[0]['lr'])
             # Save model checkpoint if requested
             if save_checkpoint and is_best and checkpoint_filename is not None:
                 saved_state = dict(

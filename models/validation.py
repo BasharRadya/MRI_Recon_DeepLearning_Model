@@ -46,7 +46,7 @@ def do_validation(param_grid, dl_train, dl_valid):
         del params['lr']
         model = PEAR.PEARModel(**params)
         optimizer = optim.Adam(model.parameters(), lr=lr)
-        scheduler = ReduceLROnPlateau(optimizer, mode='min', patience=3, factor=0.5, threshold=0.01, verbose=True)
+        scheduler = ReduceLROnPlateau(optimizer, mode='max', patience=3, factor=0.5, threshold=0.7)
 
         # Train and evaluate the model
         trainer = training.PEARTrainer(

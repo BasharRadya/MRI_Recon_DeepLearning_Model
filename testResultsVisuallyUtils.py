@@ -6,14 +6,14 @@ def loadModel():
     params = {
         #'drop_rate': np.arange(0.1, 0.75, 0.1),
         'block_len': 1,
-        'blocks_num': 3,
+        'blocks_num': 4,
         'bottleneck_block_len': 2,
         'device': 'cuda',
         'drop_rate': 0.1,
         'first_channel': 64,
         'in_channel': 1,
         'k_size': 3,
-        'learn_mask': True,
+        'learn_mask': False,
         'lr': 0.001,
         'st': 2,
     }
