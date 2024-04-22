@@ -20,7 +20,6 @@ class PEARModel(torch.nn.Module):
         st
     ):
         super().__init__()
-    
 
         self.subsample = SubsamplingLayer(drop_rate, device, learn_mask) #initialize subsampling layer - use this in your own model
         self.learn_mask = learn_mask
@@ -34,12 +33,11 @@ class PEARModel(torch.nn.Module):
         is_first_block = True
         block_channel = None
 
-        def getBlock(in_ch, out_ch):
-            return nn.Sequential(
-                nn.Conv2d(in_channels=in_ch, out_channels=out_ch, kernel_size=k_size, padding=1),
-                nn.Dropout(p=drop_rate),
-                nn.ReLU(),
-            )
+        def getBlock(in_ch, out_ch, act_and_drop=True):
+            li = [nn.Conv2d(in_channels=in_ch, out_channels=out_ch, kernel_size=k_size, padding=1)]
+            if act_and_drop:
+                li +=  [nn.Dropout(p=drop_rate), nn.ReLU()]
+            return nn.Sequential(*li)
         for block_i in range(blocks_num):
             encoder_seq_list = []
             decoder_seq_list = []
@@ -58,7 +56,8 @@ class PEARModel(torch.nn.Module):
                     cur_in = block_channel
                 cur_out = block_channel
                 encoder_seq_list.append(getBlock(cur_in, cur_out))
-                decoder_seq_list.append(getBlock(cur_out, cur_in))
+                act_and_drop = not (is_first and is_first_block)
+                decoder_seq_list.append(getBlock(cur_out, cur_in, act_and_drop=act_and_drop))
                 is_first = False
             encoder_li.append(nn.Sequential(*encoder_seq_list))
             decoder_seq_list.reverse()
@@ -94,6 +93,11 @@ class PEARModel(torch.nn.Module):
         self.pool_li = convert_models_to_cuda(pool_li)
         self.upscale_li = convert_models_to_cuda(upscale_li)
         self.bottleneck = bottleneck.to(device)
+
+        self.encoder_li = nn.ModuleList(self.encoder_li)
+        self.decoder_li = nn.ModuleList(self.decoder_li)
+        self.pool_li = nn.ModuleList(self.pool_li)
+        self.upscale_li = nn.ModuleList(self.upscale_li)
         
         # self.encoder_seq1 = nn.Sequential(
         #     nn.Conv2d(in_channels=1, out_channels=64, kernel_size=3, padding=1),

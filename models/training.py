@@ -272,12 +272,13 @@ class PEARTrainer(Trainer):
         model = model.to(device)
         super().__init__(model, loss_fn, optimizer, device)
         self.mask_lr = mask_lr
+        # self.flag = True
 
 
     def train_batch(self, batch) -> BatchResult:
         
         x, y = batch
-        orig_x = x
+        #orig_x = x
         x = x.to(self.device)  # Image batch (N,C,H,W)
         y = y.to(self.device)
         y = y.unsqueeze(1)
@@ -285,10 +286,29 @@ class PEARTrainer(Trainer):
         loss = self.loss_fn(model_out, y)
         self.optimizer.zero_grad()
         loss.backward()
+        # if self.flag:
+        #     with torch.no_grad():
+        #         self.flag = False
+        #         import os
+        #         orig_x = orig_x.to(self.device)
+        #         orig_x = self.model.subsample(orig_x)
+        #         args = [("./results/label.pth", y),
+        #             ("./results/reconstructed.pth", model_out),
+        #             ("./results/input.pth", orig_x),
+        #             ("./results/input2.pth", x),
+        #             ("./results/mask.pth", self.model.subsample.mask),
+        #             ("./results/bin_mask.pth", self.model.subsample.binary_mask),
+        #             ("./results/model.pth", self.model.state_dict()),
+        #         ]
+        #         def saveImgs(path, to_save):
+        #             if not os.path.exists(path):
+        #                 os.makedirs(os.path.dirname(path), exist_ok=True)
+        #             torch.save(to_save, path)
+        #         for arg in args:
+        #             saveImgs(*arg)
         self.optimizer.step()
         if self.model.learn_mask: 
             self.model.subsample.mask_grad(self.mask_lr)
-        
         return BatchResult(loss.item(), 1 / loss.item())
 
     def test_batch(self, batch) -> BatchResult:

@@ -101,6 +101,13 @@ def main():
     print("starting main function")
     sys.stdout.flush()
     args = create_arg_parser().parse_args() #get arguments from cmd/defaults
+
+    #freeze seeds for result reproducability
+    random.seed(args.seed)
+    np.random.seed(args.seed)
+    torch.manual_seed(args.seed)
+
+
     print("args:")
     print(args)
     print("starting making dataloaders")
@@ -131,10 +138,7 @@ def main():
     # print(total_samples)
     # print("here")
     
-    #freeze seeds for result reproducability
-    random.seed(args.seed)
-    np.random.seed(args.seed)
-    torch.manual_seed(args.seed)
+    
     print("starting making grid")
     sys.stdout.flush()
     #model = VanillaModel(args.drop_rate, args.device, args.learn_mask).to(args.device) #Example instatiation - replace with your model
@@ -154,13 +158,13 @@ def main():
 
     param_grid = {
         #'drop_rate': np.arange(0.1, 0.75, 0.1),
-        'drop_rate': [0.2],
+        'drop_rate': [0.1],
         'device': ['cuda'],
         'learn_mask': [True, False],
         'block_len': [1],
         'blocks_num': [3, 4],
         'bottleneck_block_len': [2],
-        'first_channel': [8],
+        'first_channel': [64],
         'in_channel': [1],
         'k_size': [3],
         'st': [2],

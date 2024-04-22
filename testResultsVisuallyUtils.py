@@ -9,8 +9,8 @@ def loadModel():
         'blocks_num': 3,
         'bottleneck_block_len': 2,
         'device': 'cuda',
-        'drop_rate': 0.2,
-        'first_channel': 8,
+        'drop_rate': 0.1,
+        'first_channel': 64,
         'in_channel': 1,
         'k_size': 3,
         'learn_mask': True,
@@ -20,7 +20,7 @@ def loadModel():
     model_str = [(str(params[param]) + ' ') for param in params]
     model_str = ''.join(model_str) + '.pt'
     checkpoint_filename = "checkpoints/" + model_str
-
+    print(checkpoint_filename)
     del params['lr']
     model = PEAR.PEARModel(**params)
     saved_state = torch.load(checkpoint_filename, map_location="cuda")
@@ -47,7 +47,7 @@ def runModelAndSaveImgs(model, num):
         model_out = model(x)
         args = [("./results/label.pth", y),
             ("./results/reconstructed.pth", model_out),
-            ("./results/input.pth", orig_x)
+            ("./results/input.pth", orig_x),
         ]
         def saveImgs(path, to_save):
             if not os.path.exists(path):
@@ -62,13 +62,11 @@ def loadDataFromFile():
     args = [
         "./results/label.pth",
         "./results/reconstructed.pth",
-        "./results/input.pth"
+        "./results/input.pth",
     ]
     def loadImgs(path):    
         return torch.load(path)
     li = []
     for arg in args:
         li.append(loadImgs(arg))
-    label, recon, inp = li
-    return label, recon, inp 
-    print(label.shape)
+    return li
