@@ -157,18 +157,17 @@ def main():
     # }
 
     param_grid = {
-        #'drop_rate': np.arange(0.1, 0.75, 0.1),
-        'drop_rate': [0.1],
+        'drop_rate': np.arange(0.1, 0.75, 0.1),
         'device': ['cuda'],
-        'learn_mask': [True, False],
+        'learn_mask': [False, True],
         'block_len': [1],
-        'blocks_num': [3, 4],
+        'blocks_num': [4],
         'bottleneck_block_len': [2],
-        'first_channel': [8],
+        'first_channel': [64],
         'in_channel': [1],
         'k_size': [3],
         'st': [2],
-        'lr': [0.001],
+        'lr': [0.001]
     }
     print("starting validation")
 
